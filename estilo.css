@@ -1,3 +1,8 @@
+:root {
+    --primary-color: #007BFF;
+
+}
+
 * {
 margin: 0;
 padding: 0;
@@ -20,6 +25,7 @@ line-height: 1.6;
     align-items: center;
     justify-content: space-between;
     padding: 20px 0;
+    background-color: var(--primary-color);
 }
 .nav {
     display: flex;
@@ -51,6 +57,14 @@ line-height: 1.6;
     gap: 40px;
     align-items: center;
     justify-content: space-around;
+}
+
+.card {
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    padding: 20px;
+    border-radius: 10px;
+    color: white;
+    background-color: var(--primary-color);
 }
 
 @media (max-width: 760px) {
