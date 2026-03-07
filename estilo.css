@@ -34,3 +34,35 @@ line-height: 1.6;
 .nav-link:hover {
     color: #007BFF;
 }
+
+.hero-content {
+    display: flex;
+    align-items: center;
+    padding: 80px 0;
+    gap: 40px;
+}
+
+.hero-text, .hero-media {
+    flex: 1;
+}
+
+.cards {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: space-around;
+}
+
+@media (max-width: 760px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .cards {
+        flex-direction: column;
+    }
+}
