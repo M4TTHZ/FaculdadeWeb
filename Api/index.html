@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Clima</title>
+  </head>
+  <body>
+    <h1 id="local"></h1>
+    <p id="clima"></p> <br>
+    <p id="tempo"></p>
+    <script>
+        let nomeCidade = "belo horizonte";
+        let latitude = 0;
+        let longitude = 0;
+        let clima = "";
+
+        async function carregarClima() {
+
+            const responseGeo = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + nomeCidade);
+
+            const dataGeo = await responseGeo.json();
+
+            latitude = dataGeo.results[0].latitude;
+            longitude = dataGeo.results[0].longitude;
+
+            const responseClima = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+
+            const dataClima = await responseClima.json();
+
+            const wetherCode = dataClima.current_weather.weathercode;
+            const temperatura = dataClima.current_weather.temperature;
+            const vento = dataClima.current_weather.windspeed;
+
+            if (wetherCode >=0 && wetherCode <=3){
+                clima = "☀️ Céu limpo"
+            } else if(wetherCode >= 45 && wetherCode <= 45){
+                clima="🌫️ Névoa"
+            } else if(wetherCode >= 51 && wetherCode <= 55){
+                clima="🌧️ Garoa"
+            } else if(wetherCode >= 61 && wetherCode <= 65){
+                clima="🌧️🌧️ Chuva"
+            } else if(wetherCode >= 66 && wetherCode <= 67){
+                clima="❄️ Chuva congelante"
+            } else if(wetherCode >= 71 && wetherCode <= 75){
+                clima="🌨️ Neve"
+            } else if(wetherCode >= 80 && wetherCode <= 82){
+                clima="🌧️ Pancadas (chuva intermitente)"
+            } else if(wetherCode >= 95 && wetherCode <= 99){
+                clima="⛈️ Tempestade"
+            } 
+
+            document.getElementById("local").textContent = nomeCidade;
+
+            document.getElementById("clima").textContent = `Temperatura: ${temperatura}°C, Vento: ${vento} km/h`;
+
+            document.getElementById("tempo").textContent = `Clima: ${clima} | ${wetherCode}`;
+        }
+
+
+        carregarClima();
+
+    </script>
+  </body>
+</html>
