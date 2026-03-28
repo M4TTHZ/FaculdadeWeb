@@ -3,120 +3,133 @@ const inputTarefa = document.querySelector("#input-tarefa");
 const listaTarefas = document.querySelector("#lista-tarefas");
 const contador = document.querySelector("#contador");
 
-let tarefas = JSON.parse(window.localStorage.getItem("tarefas")) || [];
-// renderizarTarefas();
-let proximoId = 1;
-
-
-// function saudacao(noeme) {
-//    return "Batata "+ noeme;
-// }
-// console.log(saudacao("São Paulo"));
-
-// const saudacao2 = (nome) => "Batata " + nome;
-// console.log(saudacao2("São Paulo"));
-
-function criarTarefa(texto) {
-    return {
-        id: proximoId,
-        texto: texto,
-        concluida: false
-    };
-}
+let tarefas = [];
 
 const atualizarContador = () => {
-    const pendente = tarefas.filter(tarefa => !tarefa.concluida).length;
-
-    contador.textContent = pendente + " tareas pendentes";
-}
-
-// const frutas = ["banana", "maçã", "melão", "abacaxi"];
-
-// for(let i = 0; i < frutas.length; i++) {
-//     console.log(frutas[i]);
-// }
-
-// for(const fruta of frutas) {
-//     console.log(fruta);
-// }
-
-// frutas.forEach(element => {
-//     console.log(element);
-// });
-
-// const numeros = [1, 2, 3, 4, 5];
-// console.log(numeros);
-// const numerosDobrados = numeros.map(n => n * 2);
-// console.log(numerosDobrados);
+  const pendente = tarefas.filter((tarefa) => !tarefa.concluida).length;
+  contador.textContent = pendente + " tarefas pendentes";
+};
 
 function renderizarTarefas() {
-    listaTarefas.innerHTML = "";
+  listaTarefas.innerHTML = "";
 
-    tarefas.forEach(tarefa => {
-        const li = document.createElement("li");
-       
-        
-        if(tarefa.concluida) {
-            li.classList.add("concluida");
-        }
+  tarefas.forEach((tarefa) => {
+    const li = document.createElement("li");
 
-        li.innerHTML = `
-            <span>${tarefa.texto}</span>
-            ${tarefa.concluida == true ? `` : `<button data-id="${tarefa.id}" class="btn-concluir">C</button>`}
-            <button data-id="${tarefa.id}" class="btn-remover">X</button>
-        `
+    if (tarefa.concluida) {
+      li.classList.add("concluida");
+    }
 
-        listaTarefas.appendChild(li);
+    li.innerHTML = `
+      <span>${tarefa.texto}</span>
+      ${!tarefa.concluida ? `<button data-id="${tarefa.id}" class="btn-concluir">✓</button>` : ""}
+      <button data-id="${tarefa.id}" class="btn-remover">✗</button>
+    `;
 
+    listaTarefas.appendChild(li);
+  });
+
+  atualizarContador();
+}
+
+// ========== FUNÇÕES DA API ==========
+
+async function carregarTarefas() {
+  try {
+    const response = await fetch("http://localhost:3000/tarefas");
+    tarefas = await response.json();
+    renderizarTarefas();
+  } catch (erro) {
+    console.error("Erro ao carregar tarefas:", erro);
+    alert(
+      "Erro ao conectar com o servidor. Verifique se o backend está rodando.",
+    );
+  }
+}
+
+async function adicionarTarefa(texto) {
+  try {
+    const response = await fetch("http://localhost:3000/nova-tarefa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texto }),
     });
 
-    atualizarContador();
+    if (response.ok) {
+      await carregarTarefas(); // Recarrega a lista do servidor
+    } else {
+      const erro = await response.json();
+      alert("Erro: " + erro.erro);
+    }
+  } catch (erro) {
+    console.error("Erro ao adicionar tarefa:", erro);
+    alert("Erro ao conectar com o servidor.");
+  }
 }
 
-formulario.addEventListener("submit", function(evento) {
-    evento.preventDefault();
+async function concluirTarefa(id) {
+  try {
+    const response = await fetch(`http://localhost:3000/tarefa/${id}`, {
+      method: "PUT",
+    });
 
-    const texto = inputTarefa.value.trim();
+    if (response.ok) {
+      await carregarTarefas(); // Recarrega a lista
+    } else {
+      alert("Erro ao concluir tarefa");
+    }
+  } catch (erro) {
+    console.error("Erro ao concluir tarefa:", erro);
+    alert("Erro ao conectar com o servidor.");
+  }
+}
 
-    if(texto === "") return;
+async function removerTarefa(id) {
+  try {
+    const response = await fetch(`http://localhost:3000/tarefa/${id}`, {
+      method: "DELETE",
+    });
 
-    const novaTarefa = criarTarefa(texto);
-    proximoId++;
-    tarefas.push(novaTarefa);
+    if (response.ok) {
+      await carregarTarefas(); // Recarrega a lista
+    } else {
+      alert("Erro ao remover tarefa");
+    }
+  } catch (erro) {
+    console.error("Erro ao remover tarefa:", erro);
+    alert("Erro ao conectar com o servidor.");
+  }
+}
 
-    window.localStorage.setItem("tarefas", JSON.stringify(tarefas));
+// ========== EVENTOS ==========
 
-    inputTarefa.value = "";
-    inputTarefa.focus();
+formulario.addEventListener("submit", async function (evento) {
+  evento.preventDefault();
 
-    renderizarTarefas();
+  const texto = inputTarefa.value.trim();
+
+  if (texto === "") return;
+
+  await adicionarTarefa(texto);
+
+  inputTarefa.value = "";
+  inputTarefa.focus();
 });
 
-listaTarefas.addEventListener("click", function(evento) {
-    const alvo = evento.target;
+listaTarefas.addEventListener("click", async function (evento) {
+  const alvo = evento.target;
+  const id = alvo.dataset.id;
 
-    const id = (alvo.dataset.id);
+  if (!id) return;
 
-    if(alvo.classList.contains("btn-concluir")) {
-        alternarConcluida(id);
-    }
+  if (alvo.classList.contains("btn-concluir")) {
+    await concluirTarefa(parseInt(id));
+  }
 
-    if(alvo.classList.contains("btn-remover")) {
-        removerTarefa(id);
-    }
+  if (alvo.classList.contains("btn-remover")) {
+    await removerTarefa(parseInt(id));
+  }
 });
 
-function alternarConcluida(id) {
-    const tarefa = tarefas.find(t => t.id == id);
-    
-    tarefa.concluida = true;
-    renderizarTarefas();
-}
-
-function removerTarefa(id) {
-    tarefas = tarefas.filter(t => t.id != id);
-
-    tarefas = tarefas.filter(t => t.id != id);
-    renderizarTarefas();
-}
-renderizarTarefas();
+// ========== INICIALIZAÇÃO ==========
+carregarTarefas();
